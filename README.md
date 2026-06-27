@@ -76,9 +76,3 @@ Check past runs anytime with:
 ```bash
 cat agent.log
 ```
-
-## Notes
-
-- **Free seats.aero accounts** only show availability within the next 60 days. A [Pro account](https://seats.aero) ($9.99/mo) extends this to 1 year.
-- ANA releases First Class award seats **355 days** in advance, typically around midnight JST.
-- The agent uses a non-headless browser with anti-detection settings to bypass Cloudflare protection.
