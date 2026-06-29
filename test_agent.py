@@ -201,6 +201,57 @@ class TestScrapeAnafParsing:
         flights = self._mock_scrape(html)
         assert flights == []
 
+    def test_all_flights_not_available_returns_empty(self):
+        html = """
+        <html><body><table>
+          <tr><th>Date</th><th>Last Seen</th><th>Source</th><th>Origin</th><th>Destination</th><th>Business</th><th>First</th><th></th></tr>
+          <tr><td>2026-07-06</td><td>2 hours ago</td><td>Aeroplan</td><td>HNL</td><td>NRT</td><td>Not Available</td><td>Not Available</td><td></td></tr>
+          <tr><td>2026-08-01</td><td>1 hour ago</td><td>Velocity</td><td>LAX</td><td>NRT</td><td>Not Available</td><td>Not Available</td><td></td></tr>
+        </table></body></html>
+        """
+        flights = self._mock_scrape(html)
+        assert flights == []
+
+    def test_header_only_table_returns_empty(self):
+        html = """
+        <html><body><table>
+          <tr><th>Date</th><th>Last Seen</th><th>Source</th><th>Origin</th><th>Destination</th><th>Business</th><th>First</th><th></th></tr>
+        </table></body></html>
+        """
+        flights = self._mock_scrape(html)
+        assert flights == []
+
+
+class TestMainNoAvailability:
+    """Test that main() handles zero availability without errors."""
+
+    @patch("agent.send_mac_notification")
+    @patch("agent.scrape_anaf", return_value=[])
+    def test_main_no_flights_no_error(self, mock_scrape, mock_notify, tmp_path):
+        with patch("agent.LAST_RESULTS_PATH", str(tmp_path / "results.json")):
+            from agent import main
+            main()
+        mock_notify.assert_not_called()
+
+    @patch("agent.send_mac_notification")
+    @patch("agent.scrape_anaf", return_value=[])
+    def test_main_no_flights_saves_empty_results(self, mock_scrape, mock_notify, tmp_path):
+        filepath = tmp_path / "results.json"
+        with patch("agent.LAST_RESULTS_PATH", str(filepath)):
+            from agent import main
+            main()
+        assert json.loads(filepath.read_text()) == []
+
+    @patch("agent.send_mac_notification")
+    @patch("agent.scrape_anaf")
+    def test_main_all_not_available_no_notification(self, mock_scrape, mock_notify, tmp_path):
+        """Scraper already filters 'Not Available', so empty list comes through."""
+        mock_scrape.return_value = []
+        with patch("agent.LAST_RESULTS_PATH", str(tmp_path / "results.json")):
+            from agent import main
+            main()
+        mock_notify.assert_not_called()
+
 
 # -- send_mac_notification tests --
 
